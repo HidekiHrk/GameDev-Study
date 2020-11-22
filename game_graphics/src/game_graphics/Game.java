@@ -1,7 +1,5 @@
 package game_graphics;
 
-import sun.security.util.Debug;
-
 import java.awt.*;
 import java.awt.image.*;
 
@@ -20,15 +18,20 @@ public class Game extends Canvas implements Runnable {
     private Thread thread;
     private BufferedImage image;
     private SpriteSheet sheet;
-    private BufferedImage player;
-    private int rad = 0;
+    private BufferedImage[] player;
+    private final int animVel = 3;
+    private int animCounter = 0;
+    private int animFrame = 0;
     public boolean isRunning;
 
 
     public Game() {
         sheet = new SpriteSheet("/spritesheet.png");
 
-        player = sheet.getSprite(0, 0, 16, 16);
+        player = new BufferedImage[3];
+        for(int spriteId = 0; spriteId < 3; spriteId++){
+            player[spriteId] = sheet.getSprite(spriteId * 16, 0, 16,16);
+        }
         setPreferredSize(
             new Dimension(WIDTH * SCALE, HEIGHT * SCALE)
         );
@@ -65,11 +68,14 @@ public class Game extends Canvas implements Runnable {
     }
 
     public void tick() {
-        rad += 20;
-        if(rad >= 360){
-            rad = 0;
+        if(animCounter < animVel){
+            animCounter++;
+        }else{
+            animFrame++;
+            animCounter = 0;
         }
-        // System.out.println("Meu jogo está rodando!");
+        if(animFrame >= 1000) animFrame = 0;
+        System.out.println("Frame: "+ animFrame);
     }
 
     public void render() {
@@ -86,8 +92,7 @@ public class Game extends Canvas implements Runnable {
         g.fillRect(0, 0, WIDTH * SCALE, HEIGHT * SCALE);
         // Draw
         Graphics2D g2 = (Graphics2D) g;
-        g2.rotate(Math.toRadians(rad), 90,90);
-        g2.drawImage(player, 82, 82, null);
+        g2.drawImage(player[animFrame % 3], 90, 90, null);
         // End of draw
         g.dispose();
         g = bs.getDrawGraphics();
@@ -102,17 +107,17 @@ public class Game extends Canvas implements Runnable {
 
     public void run(){
         GameLoop loop = new GameLoop(60.0);
-        GameLoop.Fps fps = new GameLoop.Fps();
+//        GameLoop.Fps fps = new GameLoop.Fps();
 
         while(isRunning){
             if(loop.tick()){
                 tick();
                 render();
-                fps.increment();
+//                fps.increment();
             }
-            if(fps.tick()){
-                System.out.println("FPS: " + fps.getFrames());
-            }
+//            if(fps.tick()){
+//                System.out.println("FPS: " + fps.getFrames());
+//            }
         }
 
         stop();
